@@ -1,5 +1,9 @@
+import numpy as np
+import pandas as pd
+from Preprocess import *
 from Prob_cal import *
 from Slope_cal import *
+
 
 def find_near_links(probe, df_link):
     """find nearest links of a probe points within some threshold
@@ -94,6 +98,10 @@ if __name__ == "__main__":
 
     df_probe, df_link = pd.read_csv(probe_path, link_path)
 
+    # preprocess data
+    df_probe, df_link = preprocess(df_probe, df_link)
+
+    # Mapmatching
     routes = viterbi(df_probe, df_link)
 
     # calculate slope
