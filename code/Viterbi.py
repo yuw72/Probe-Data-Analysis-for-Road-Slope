@@ -16,9 +16,16 @@ def find_near_links(probe, df_link):
         list -- list of links found within threshold
     """
 
+    threshold = 4  # (meters)
+    num = 4  # choose nearest 4 links
     links = []
-    # TODO
 
+    # Calculate four coords
+
+    # find links with ref and nref both in the coord range
+
+    # find top 4
+    
     return links
 
 
@@ -27,18 +34,31 @@ def gen_routes(df_probe, df_link):
         Each of n probe points are mapped to a link. Links can be the same. Output links number should match probe number.
 
     Arguments:
-        df_probe {dataframe} -- probe points of this sample (so same sampleID)
+        df_probe {dataframe} -- probe points of this sample (so same sampleID) in time order
         df_link {dataframe} -- all links
 
     Returns:
         routes list/array -- list of possible routes [[linkPVID0, linkPVID1, linkPVID2, ...], [linkPVID0, linkPVID1, linkPVID2, ...]]
     """
 
+    links = []
     routes = []
+    num = df_probe.shape[0]
+    
+    for probe in df_probe.iterrows():
+        links.append(find_near_links(probe, df_link))
 
-    # TODO
+    links = np.array(links)  # n * 4
 
+    routes = links[0].reshape(links.shape[1],1)
+    for state in links[1:]:
+        new_route = []
+        for route in routes:
+            for link in state:
+                new_route.append(route + [link])
+        routes = new_route
     return routes
+
 
 def viterbi(df_probe, df_link):
     """ Get the route (set of links in order) with the highest probability
@@ -57,12 +77,12 @@ def viterbi(df_probe, df_link):
 
     for sample in samples:
         df = df_probe.loc[df_probe['sampleID'] == sample]  # df of probes of current sample
+        df = df.sort_values(by=['dateTime'])
         routes = gen_routes(df, df_link)  # set of possible routes for this sample
         max_prob = 0
         
         for route in routes:
             # P(link0)
-            df = df.sort_values(by=['dateTime'])
             link0 = df.loc[df['linkPVID'] == route[0]]
             p_link0 = get_initial_prob(df[0], link0, df_link)
 
@@ -96,7 +116,8 @@ if __name__ == "__main__":
     probe_path = 'data/Partition6467ProbePoints.csv'
     link_path = 'data/Partition6467LinkData.csv'
 
-    df_probe, df_link = pd.read_csv(probe_path, link_path)
+    df_probe = pd.read_csv(probe_path)
+    df_link = pd.read_csv(link_path)
 
     # preprocess data
     df_probe, df_link = preprocess(df_probe, df_link)
