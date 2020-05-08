@@ -1,8 +1,11 @@
 import numpy as np
 import pandas as pd
-from Preprocess import *
+# from Preprocess import *
 from Prob_cal import *
-from Slope_cal import *
+# from Slope_cal import *
+
+def take_value(e):
+    return e[1]
 
 
 def find_near_links(probe, df_link):
@@ -18,13 +21,34 @@ def find_near_links(probe, df_link):
 
     threshold = 4  # (meters)
     num = 4  # choose nearest 4 links
+    links_dis = []  # list of tuples
     links = []
 
     # Calculate four coords
+    x_min = float(probe['latitude']) - 4
+    x_max = float(probe['latitude']) + 4
+    y_min = float(probe['longitude']) - 4
+    y_max = float(probe['longitude']) + 4
 
     # find links with ref and nref both in the coord range
+    for index, link in df_link.iterrows():
+        link_shape = link['shapeInfo'].split('|')
+        flag = 1
+        # check if all the points are inside the distance
+        for index in range(len(link_shape)):
+            p = link_shape[index].split('/')
+            if (float(p[0]) > x_max) or (float(p[0]) < x_min) or (float(p[1]) > y_max) or (float(p[1]) < y_min):
+                flag = 0
+                break
+        # yes
+        if flag == 1:
+            dis = get_dist(probe, link)
+            links_dis.append((link['linkPVID'], dis))
 
     # find top 4
+    links_dis.sort(key=take_value)
+    for link in links_dis[:4]:
+        links.append(link[0])
     
     return links
 
@@ -38,14 +62,14 @@ def gen_routes(df_probe, df_link):
         df_link {dataframe} -- all links
 
     Returns:
-        routes list/array -- list of possible routes [[linkPVID0, linkPVID1, linkPVID2, ...], [linkPVID0, linkPVID1, linkPVID2, ...]]
+        routes list of array -- list of possible routes [[linkPVID0, linkPVID1, linkPVID2, ...], [linkPVID0, linkPVID1, linkPVID2, ...]]
     """
 
     links = []
     routes = []
     num = df_probe.shape[0]
     
-    for probe in df_probe.iterrows():
+    for index, probe in df_probe.iterrows():
         links.append(find_near_links(probe, df_link))
 
     links = np.array(links)  # n * 4
@@ -55,7 +79,7 @@ def gen_routes(df_probe, df_link):
         new_route = []
         for route in routes:
             for link in state:
-                new_route.append(route + [link])
+                new_route.append(np.append(route, link))
         routes = new_route
     return routes
 
@@ -116,8 +140,14 @@ if __name__ == "__main__":
     probe_path = 'data/Partition6467ProbePoints.csv'
     link_path = 'data/Partition6467LinkData.csv'
 
-    df_probe = pd.read_csv(probe_path)
-    df_link = pd.read_csv(link_path)
+    df_probe = pd.read_csv(probe_path, nrows=10)
+    df_link = pd.read_csv(link_path, nrows=10)
+
+    df_probe.columns = ['sampleID', 'dataTime', 'sourceCode', 'latitude', 'longitude', 'altitude', 'speed', 'heading']
+    df_link.columns = ['linkPVID', 'refNodeID', 'nrefNodeID', 'length', 'functionalClass', 'directionofTravel',
+                       'speedCategory', 'fromRefSpeedLimit',
+                       'toRedSpeedLimit', 'fromRefNumLanes', 'toRefNumLanes', 'multiDigitized', 'urban', 'timeZone',
+                       'shapeInfo', 'curvatureInfo', 'slopeInfo']
 
     # preprocess data
     df_probe, df_link = preprocess(df_probe, df_link)
