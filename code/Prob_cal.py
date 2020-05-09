@@ -47,7 +47,7 @@ def get_initial_prob(probe, link, df_link):
     """
 
     # threshold of distance (meters)
-    threshold = 4
+    threshold = 200
     denominator = 0
     # find all links in the threshold
 
