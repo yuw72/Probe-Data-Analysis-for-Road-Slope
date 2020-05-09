@@ -27,7 +27,7 @@ def get_dist(probe, link):  # calculate the closest distance from probe to a roa
         p2 = link_shape[index].split('/')
 
         dist = point_to_line(p1, p2, (lat, long))
-
+        print(f'dist is {dist}')
         if dist < min_dist:
             min_dist = dist
 
@@ -52,13 +52,16 @@ def get_initial_prob(probe, link, df_link):
     # find all links in the threshold
 
     numerator = 1 / get_dist(probe, link)
+    while True:
+        for index, rows in df_link.iterrows():
+            dist = get_dist(probe, rows)
+            if dist < threshold:
+                denominator += 1 / dist
+        if denominator != 0:
+            return numerator / denominator
+        else:
+            threshold += 100
 
-    for index, rows in df_link.iterrows():
-        dist = get_dist(probe, rows)
-        if dist < threshold:
-            denominator += 1 / dist
-
-    return numerator / denominator
 
     # calculate prob for all links = (1/dis(probe, link))/sum(1/dis(probe, links))
 
@@ -78,11 +81,12 @@ def get_emission_prob(probe, link):
 
     # variance parameters (empirically choosen) CHANGE IF YOU WANT!
     v_phi = 1  # radian angle
-    v_b = 4  # meters
+    v_b = 40  # meters
 
     # calculate the heading of the link
     # cal b
     b = get_dist(probe, link)
+    # print(f'dist from probe to link is {b}')
 
     link_shape = link['shapeInfo'].split('|')
     p = (probe['latitude'], probe['longitude'])
@@ -97,18 +101,29 @@ def get_emission_prob(probe, link):
     x1, y1 = float(p1[0]), float(p1[1])
     x2, y2 = float(p2[0]), float(p2[1])
 
-    angle = np.arctan2(x2 - x1, y2 - y1)  # * 180 / np.pi in radian
+    # print(f'p1 coord is {x1}, {y1}')
+    # print(f'p2 coord is {x2}, {y2}')
+    # print(f'delta is {x2-x1}, {y2-y1}')
+
+    angle = np.arctan2(x2 - x1, y2 - y1)  # * 180 / np.pi  # in radian
+    if angle < 0:
+        angle += 2 * np.pi
+    # print(f'angle is {angle}')
 
     # cal delta heading
-
+    # print('probe heading is', {probe['heading'] / 180 * np.pi})
     delta_heading = probe['heading'] / 180 * np.pi - angle  # in radian
+    # print(f'delta heading is {delta_heading}')
 
     # calculate normal distributions
 
     p_b = 1 / (np.sqrt(2 * np.pi) * v_b) * np.exp(-0.5 * (b / v_b) ** 2)
     p_phi = 1 / (np.sqrt(2 * np.pi) * v_phi) * np.exp(-0.5 * (delta_heading / v_phi) ** 2)
+
+    # print(f'prob by dist is {p_b}')
+    # print(f'prob by angle is {p_phi}')
     # return prob
-    return p_b * p_phi
+    return p_b  # * p_phi
 
 
 def get_transition_prob(link1, link2, df_link):
@@ -147,8 +162,8 @@ def get_transition_prob(link1, link2, df_link):
 
 
 if __name__ == '__main__':
-    probe_path = '../data/Partition6467ProbePoints.csv'
-    link_path = '../data/Partition6467LinkData.csv'
+    probe_path = '../data/new_probe_data.csv'
+    link_path = '../data/new_link_data.csv'
 
     df_probe = pd.read_csv(probe_path, engine='python', nrows=100)
     df_link = pd.read_csv(link_path, engine='python', nrows=100)
@@ -163,10 +178,16 @@ if __name__ == '__main__':
 
     # get_initial_prob(df_probe.iloc[0], df_link.iloc[0], df_link)
 
-    # get_emission_prob(df_probe.iloc[0], df_link.iloc[0])
+    idx = np.random.randint(0, 100, 2)
+    # print(f'index is {idx}')
+    get_dist(df_probe.iloc[idx[0]], df_link.iloc[idx[1]])
+
+    # print('coordinate of probe is ', df_probe['latitude'], df_probe['longitude'])
+
+    e_prob = get_emission_prob(df_probe.iloc[idx[0]], df_link.iloc[idx[1]])
+    # print(f'emission probability = {e_prob}')
 
     # p = get_transition_prob(df_link.iloc[0], df_link.iloc[0], df_link)
-
 
     # for index, rows in df_probe.iterrows():
     #     rows = np.array(rows)
