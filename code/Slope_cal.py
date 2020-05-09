@@ -110,47 +110,57 @@ def calc(probe_dict, df_probe, df_link, linkPVID):
         points.append((dist,probe_loc[2]))
     slope_info = link['slopeInfo'].values[0]
     if slope_info != slope_info:
-        return None
+        return None,None
     # slope_info = link['slopeInfo'].values[0].split('|')
+    
     slope_info = slope_info.split('|')
-
-    if len(slope_info) == 0:
-        return None
-    elif len(slope_info) == 1:
-        dist, slope_truth = slope_info[0].split('/')
-        slope_truth = float(slope_truth)
-        slopes = []
-        point = points[0]
-        slope = (ref[2]-point[1])/math.sqrt(abs(point[0]**2-(ref[2]-point[1])**2))
-        for i in enumerate(slope_info):
+    
+    slopes = []
+    slope_truths = []
+    
+    if len(points) <2:
+        if len(points)==0:
+            points.append(non_ref)
+        for i,info in enumerate(slope_info):            
+            dist, slope_truth = slope_info[i].split('/')
+            dist = float(dist)
+            slope_truth = float(slope_truth)
+            point = points[0]
+            slope = (ref[2]-point[1])/math.sqrt(abs(point[0]**2-(ref[2]-point[1])**2))
             slopes.append(slope)
-        
+            slope_truths.append(slope_truth)       
+        return slopes, slope_truths
     else:
-        slopes = []
         for i,info in enumerate(slope_info):            
             dist, slope_truth = slope_info[i].split('/')
             dist = float(dist)
             slope_truth = float(slope_truth)
             slope = cal_slope(dist, points)
             slopes.append(slope)
+            slope_truths.append(slope_truth)
+        return slopes, slope_truths
     
-    return slopes, slope_truth
-    
+
 def get_slope(routes, df_probe, df_link):
     count = 0
     err = 0
     probe_dict = get_dictionary(routes)
+    result = []
     for linkPVID in probe_dict.keys():
-        slopes, ground_slope = calc(probe_dict, df_probe, df_link, linkPVID)
+        slopes, slope_truths = calc(probe_dict, df_probe, df_link, linkPVID)
         if slopes == None:
             continue
-        for slope in slopes:
-            err += abs(slope-ground_slope)**2
+        res = [linkPVID, slope_truths, slopes]
+        result.append(res)
+        for i, slope in enumerate(slopes):
+            err += abs(slope-slope_truths[i])**2
             count += 1
-            print("slope: ",slope)
-    print("count:   ",count)
+        # print("slope: ",slopes," truth: ", slope_truths)
     err = err/count
-        # break
+    print(err)
+    df_result = pd.DataFrame(result, columns = ['linkPVID','GivenSlope','SlopeExperiment']) 
+    df_result.to_csv('data/test.csv', index=False)
+
 
 probe_path = 'data/new_probe_data.csv'
 link_path = 'data/new_link_data.csv'
@@ -159,6 +169,6 @@ df_probe = pd.read_csv(probe_path,nrows=1000)
 df_link = pd.read_csv(link_path,nrows = 1000)
 
 
-routes = {3496:[62007637,51881672,51881767,51881768,51881825],4552:[62007637,51881672,51881767,51881768,51881825]}
+routes = {3496:[62007637,51881672,51881767,51881768,51881825],4552:[62007637,51881672,51881767,51881768]}
 # dist = mapping(ref=(2,2),probe=[0,1])
 get_slope(routes, df_probe, df_link)
