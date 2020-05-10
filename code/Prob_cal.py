@@ -48,7 +48,7 @@ def get_initial_prob(probe, link, df_link):
 
     # threshold of distance (meters)
     # threshold = 200
-    num_roads = 10
+    # num_roads = 10
     denominator = 0
     # find all links in the threshold
 
@@ -58,13 +58,18 @@ def get_initial_prob(probe, link, df_link):
     for index, rows in df_link.iterrows():
         distance.append(get_dist(probe, rows))
 
-    distance.sort()
+    mean = np.mean(distance)
+    std = np.std(distance)
+
+    threshold = mean - 3 * std
+    # distance.sort()
 
     # while distance[0] > threshold:
     #     threshold += 100
 
-    for index in range(num_roads):
-        denominator += 1/distance[index]
+    for d in distance:
+        if d < threshold:
+            denominator += 1 / d
 
     return numerator / denominator
 
