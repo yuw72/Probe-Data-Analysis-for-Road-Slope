@@ -2,7 +2,7 @@ import numpy as np
 import math
 import pandas as pd
 from sklearn.metrics import accuracy_score
-
+import json
 # def cal_error():
 #     # TODO:
 #     return err
@@ -54,13 +54,13 @@ def get_dictionary(routes):
 
 # pass
 def get_link(df_link, linkPVID):
-    return df_link.loc[df_link['linkPVID'] == linkPVID]
+    return df_link.loc[df_link['linkPVID'] == int(linkPVID)]
 
 # pass
 def get_probe(df_probe, probe_id):
     sample_id = probe_id[0]
     idx = probe_id[1]
-    return df_probe.loc[df_probe['sampleID'] == sample_id].iloc[idx]
+    return df_probe.loc[df_probe['sampleID'] == int(sample_id)].iloc[idx]
 
 # pass
 def find_two_closest_point(dist, points): 
@@ -131,7 +131,7 @@ def calc(probe_dict, df_probe, df_link, linkPVID):
                 div = 1
             slope = (ref[2]-point[1])/math.sqrt(div)
             slopes.append(slope)
-            slope_truths.append(slope_truth)    
+            slope_truths.append((dist,slope_truth))   
         return slopes, slope_truths
     else:
         for i,info in enumerate(slope_info):            
@@ -140,9 +140,30 @@ def calc(probe_dict, df_probe, df_link, linkPVID):
             slope_truth = float(slope_truth)
             slope = cal_slope(dist, points)
             slopes.append(slope)
-            slope_truths.append(slope_truth)
+            slope_truths.append((dist,slope_truth))
         return slopes, slope_truths
     
+def convert_json():
+    with open('data/routes.txt') as json_file: 
+        data = json.load(json_file) 
+    return data
+
+def weighted_mean(slopes, slope_truths):
+    truth_weight = []
+    total = 0
+    avg_exp = 0
+    avg_truth = 0
+    for (dist,slope_truth) in slope_truths:
+        truth_weight.append(dist)
+        total += dist
+
+    for i in range(len(slopes)):
+        slope = slopes[i]
+        weight = truth_weight[i]
+        truth = slope_truths[i][1]
+        avg_exp+= weight/total*slope
+        avg_truth += weight/total*truth
+    return avg_exp, avg_truth
 
 def get_slope(routes, df_probe, df_link):
     count = 0
@@ -153,25 +174,28 @@ def get_slope(routes, df_probe, df_link):
         slopes, slope_truths = calc(probe_dict, df_probe, df_link, linkPVID)
         if slopes == None:
             continue
-        res = [linkPVID, slope_truths, slopes]
+
+        slope, slope_truth = weighted_mean(slopes, slope_truths)
+        res = [linkPVID, slope_truth, slope]
+        err+= abs(slope-slope_truth)**2
         result.append(res)
-        for i, slope in enumerate(slopes):
-            err += abs(slope-slope_truths[i])**2
-            count += 1
+        count += 1
         # print("slope: ",slopes," truth: ", slope_truths)
     err = err/count
     print(err)
     df_result = pd.DataFrame(result, columns = ['linkPVID','GivenSlope','SlopeExperiment']) 
-    df_result.to_csv('data/result.csv', index=False)
+    df_result.to_csv('data/test.csv', index=False)
 
 
-# probe_path = 'data/new_probe_data.csv'
-# link_path = 'data/new_link_data.csv'
+probe_path = 'data/new_probe_data.csv'
+link_path = 'data/new_link_data.csv'
 
-# df_probe = pd.read_csv(probe_path,nrows=1000)
-# df_link = pd.read_csv(link_path,nrows = 1000)
+df_probe = pd.read_csv(probe_path,nrows=1000)
+df_link = pd.read_csv(link_path,nrows = 1000)
 
 
 # routes = {3496:[62007637,51881672,51881767,51881768,51881825],4552:[62007637,51881672,51881767,51881768]}
-# # dist = mapping(ref=(2,2),probe=[0,1])
-# get_slope(routes, df_probe, df_link)
+# dist = mapping(ref=(2,2),probe=[0,1])
+routes = convert_json()
+get_slope(routes, df_probe, df_link)
+
