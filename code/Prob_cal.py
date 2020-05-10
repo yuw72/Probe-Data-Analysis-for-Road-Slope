@@ -47,21 +47,36 @@ def get_initial_prob(probe, link, df_link):
     """
 
     # threshold of distance (meters)
-    threshold = 200
+    # threshold = 200
+    num_roads = 10
     denominator = 0
     # find all links in the threshold
 
     numerator = 1 / get_dist(probe, link)
-    while True:
-        for index, rows in df_link.iterrows():
-            dist = get_dist(probe, rows)
-            if dist < threshold:
-                denominator += 1 / dist
-        if denominator != 0:
-            return numerator / denominator
-        else:
-            threshold += 100
 
+    distance = []
+    for index, rows in df_link.iterrows():
+        distance.append(get_dist(probe, rows))
+
+    distance.sort()
+
+    # while distance[0] > threshold:
+    #     threshold += 100
+
+    for index in range(num_roads):
+        denominator += 1/distance[index]
+
+    return numerator / denominator
+
+    # while True:
+    #     for index, rows in df_link.iterrows():
+    #         dist = get_dist(probe, rows)
+    #         if dist < threshold:
+    #             denominator += 1 / dist
+    #     if denominator != 0:
+    #         return numerator / denominator
+    #     else:
+    #         threshold += 100
 
     # calculate prob for all links = (1/dis(probe, link))/sum(1/dis(probe, links))
 
@@ -91,15 +106,23 @@ def get_emission_prob(probe, link):
     link_shape = link['shapeInfo'].split('|')
     p = (probe['latitude'], probe['longitude'])
 
+    x1 = 0
+    x2 = 0
+    y1 = 0
+    y2 = 0
+
     for index in range(1, len(link_shape)):
         p1 = link_shape[index - 1].split('/')
         p2 = link_shape[index].split('/')
 
         dist = point_to_line(p1, p2, p)
         if dist == b:
+            x1, y1 = float(p1[0]), float(p1[1])
+            x2, y2 = float(p2[0]), float(p2[1])
+
             break
-    x1, y1 = float(p1[0]), float(p1[1])
-    x2, y2 = float(p2[0]), float(p2[1])
+    # x1, y1 = float(p1[0]), float(p1[1])
+    # x2, y2 = float(p2[0]), float(p2[1])
 
     # print(f'p1 coord is {x1}, {y1}')
     # print(f'p2 coord is {x2}, {y2}')
@@ -123,7 +146,7 @@ def get_emission_prob(probe, link):
     # print(f'prob by dist is {p_b}')
     # print(f'prob by angle is {p_phi}')
     # return prob
-    return p_b  # * p_phi
+    return p_b * p_phi
 
 
 def get_transition_prob(link1, link2, df_link):
