@@ -86,7 +86,7 @@ def gen_routes(df_probe, df_link):
     return routes
 
 
-def viterbi(df_probe, df_link):
+def naive(df_probe, df_link):
     """ Get the route (set of links in order) with the highest probability
 
     Arguments:
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     # df_probe, df_link = preprocess(df_probe, df_link)
 
     # Mapmatching
-    routes = viterbi(df_probe, df_link)
+    routes = naive(df_probe, df_link)
     print(routes)
     # calculate slope
     # slopes = get_slope(routes, df_link)
