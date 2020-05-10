@@ -114,8 +114,8 @@ if __name__ == "__main__":
     probe_path = 'data/new_probe_data.csv'
     link_path = 'data/new_link_data.csv'
 
-    df_probe = pd.read_csv(probe_path)
-    df_link = pd.read_csv(link_path)
+    df_probe = pd.read_csv(probe_path,nrows=100)
+    df_link = pd.read_csv(link_path,nrows=100)
 
     # Mapmatching
     routes = viterbi_new(df_probe, df_link)

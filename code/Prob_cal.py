@@ -61,7 +61,7 @@ def get_initial_prob(probe, link, df_link):
     mean = np.mean(distance)
     std = np.std(distance)
 
-    threshold = mean - 3 * std
+    threshold = mean - 2 * std
     # distance.sort()
 
     # while distance[0] > threshold:
