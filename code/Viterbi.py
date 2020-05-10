@@ -3,6 +3,7 @@ import pandas as pd
 # from Preprocess import *
 from Prob_cal import *
 # from Slope_cal import *
+from tqdm import tqdm
 
 def take_value(e):
     return e[1]
@@ -100,13 +101,13 @@ def viterbi(df_probe, df_link):
     num_samples = len(samples) 
     v_route = {}
 
-    for sample in samples:
+    for sample in tqdm(samples):
         df = df_probe.loc[df_probe['sampleID'] == sample]  # df of probes of current sample
         df = df.sort_values(by=['dateTime'])
         routes = gen_routes(df, df_link)  # set of possible routes for this sample
         max_prob = 0
         
-        for route in routes:
+        for route in tqdm(routes):
             # P(link0)
             ind = df_link.loc[df_link['linkPVID'] == route[0]].index.tolist()[0]
             link0 = df_link.iloc[ind]
@@ -114,20 +115,32 @@ def viterbi(df_probe, df_link):
 
             # Multiplication of emission probs
             p_emis = 1
+            flag_1 = 0
             for i in range(1, len(route)):
                 probe = df.iloc[i]
                 ind = df_link.loc[df_link['linkPVID'] == route[i]].index.tolist()[0]
                 link = df_link.iloc[ind]
                 p_emis *= get_emission_prob(probe, link)
 
+                if p_emis < 1e-3:
+                    flag_1 = 1
+                    break
+
+
             # Multiplication of transition probs
             p_trans = 1
+            flag_2 = 0
             for i in range(len(route) - 1):
                 ind1 = df_link.loc[df_link['linkPVID'] == route[i]].index.tolist()[0]
                 ind2 = df_link.loc[df_link['linkPVID'] == route[i+1]].index.tolist()[0]
                 link1 = df_link.iloc[ind1]
                 link2 = df_link.iloc[ind2]
                 p_trans *= get_transition_prob(link1, link2, df_link)
+                if p_trans < 1e-3:
+                    flag_2 = 1
+                    break
+            if flag_1 and flag_2:
+                continue
             
             # calculate viterbi prob of this route
             p_tot = p_link0 * p_emis * p_trans
@@ -142,8 +155,8 @@ def viterbi(df_probe, df_link):
 
 
 if __name__ == "__main__":
-    probe_path = 'data/new_probe_data.csv'
-    link_path = 'data/new_link_data.csv'
+    probe_path = '../data/new_probe_data.csv'
+    link_path = '../data/new_link_data.csv'
 
     df_probe = pd.read_csv(probe_path, nrows=100)
     df_link = pd.read_csv(link_path, nrows=20)

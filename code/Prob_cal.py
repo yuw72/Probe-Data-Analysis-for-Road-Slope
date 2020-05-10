@@ -27,7 +27,7 @@ def get_dist(probe, link):  # calculate the closest distance from probe to a roa
         p2 = link_shape[index].split('/')
 
         dist = point_to_line(p1, p2, (lat, long))
-        print(f'dist is {dist}')
+        # print(f'dist is {dist}')
         if dist < min_dist:
             min_dist = dist
 
