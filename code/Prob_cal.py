@@ -58,10 +58,10 @@ def get_initial_prob(probe, link, df_link):
     for index, rows in df_link.iterrows():
         distance.append(get_dist(probe, rows))
 
-    mean = np.mean(distance)
-    std = np.std(distance)
+    # mean = np.mean(distance)
+    # std = np.std(distance)
 
-    threshold = mean - 2 * std
+    threshold = min(distance) + 200
     # distance.sort()
 
     # while distance[0] > threshold:
