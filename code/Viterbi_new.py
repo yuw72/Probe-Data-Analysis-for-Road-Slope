@@ -53,7 +53,36 @@ def find_near_links(probe, df_link):
     return links
 
 
-def viterbi_new(df_probe, df_link):
+def find_near_links(probe, df_link, grouped_link):
+    """find nearest links of a probe points within some threshold
+
+    Arguments:
+        probe {dataframe} -- a probe point
+        df_link {dataframe} -- all link data
+
+    Returns:
+        list -- list of links found within threshold (linkPVID)
+    """
+
+    num = 4  # choose nearest 4 links
+    links_dis = []  # list of tuples
+    links = []
+
+    # Calculate g_id of probe
+    g_lat = str(int(float(probe['latitude'])/200)).zfill(5)
+    g_lon = str(int(float(probe['longitude'])/200)).zfill(5)
+    g_id = g_lat + g_lon
+
+    # find links within the group
+    links_id = grouped_link[g_id]
+    # links = df_link.loc[df_link['linkPVID'].isin(links_id)]
+    links = []
+    for i in range(len(links_id)):
+        links.append(df_link.iloc[i])
+    return links
+
+
+def viterbi_new(df_probe, df_link, grouped_link):
     """ Get the route (set of links in order) with the highest probability
 
     Arguments:
@@ -76,7 +105,7 @@ def viterbi_new(df_probe, df_link):
         route = [None]*df.shape[0]
 
         # Initial
-        links0 = find_near_links(df.iloc[0], df_link) # Need change return format
+        links0 = find_near_links(df.iloc[0], df_link, grouped_link) # Need change return format
         links[0,:len(links0)] = links0
         for i in range(len(links0)):
             T1[i,0] = get_initial_prob(df.iloc[0], links0[i], df_link) * get_emission_prob(df.iloc[0], links0[i])
@@ -113,12 +142,15 @@ def viterbi_new(df_probe, df_link):
 if __name__ == "__main__":
     probe_path = 'data/new_probe_data.csv'
     link_path = 'data/new_link_data.csv'
+    grouped_link_path = 'data/group_link_data.txt'
 
     df_probe = pd.read_csv(probe_path,nrows=100)
     df_link = pd.read_csv(link_path,nrows=100)
+    with open(grouped_link_path, 'r') as openfile: 
+        grouped_link = json.load(openfile) 
 
     # Mapmatching
-    routes = viterbi_new(df_probe, df_link)
+    routes = viterbi_new(df_probe, df_link, grouped_link)
 
     # Write to json
     with open('data/routes.txt', 'w') as file:
