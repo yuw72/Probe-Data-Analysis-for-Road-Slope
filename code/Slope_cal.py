@@ -126,9 +126,12 @@ def calc(probe_dict, df_probe, df_link, linkPVID):
             dist = float(dist)
             slope_truth = float(slope_truth)
             point = points[0]
-            slope = (ref[2]-point[1])/math.sqrt(abs(point[0]**2-(ref[2]-point[1])**2))
+            div = abs(point[0]**2-(ref[2]-point[1])**2)
+            if div ==0 :
+                div = 1
+            slope = (ref[2]-point[1])/math.sqrt(div)
             slopes.append(slope)
-            slope_truths.append(slope_truth)       
+            slope_truths.append(slope_truth)    
         return slopes, slope_truths
     else:
         for i,info in enumerate(slope_info):            
