@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from Prob_cal import *
 from tqdm import tqdm
+import json
 
 def take_value(e):
     return e[1]
@@ -104,7 +105,7 @@ def viterbi_new(df_probe, df_link):
         for j in range(df.shape[0]-1, 0, -1):
             ind = T2[ind, j]
             route[j-1] = links[j-1, ind]['linkPVID']
-        v_route[sample] = route
+        v_route[int(sample)] = route
 
     return v_route
 
@@ -113,9 +114,12 @@ if __name__ == "__main__":
     probe_path = 'data/new_probe_data.csv'
     link_path = 'data/new_link_data.csv'
 
-    df_probe = pd.read_csv(probe_path, nrows=100)
-    df_link = pd.read_csv(link_path, nrows=100)
+    df_probe = pd.read_csv(probe_path)
+    df_link = pd.read_csv(link_path)
 
     # Mapmatching
     routes = viterbi_new(df_probe, df_link)
-    print(routes)
+
+    # Write to json
+    with open('data/routes.txt', 'w') as file:
+        file.write(json.dumps(routes))

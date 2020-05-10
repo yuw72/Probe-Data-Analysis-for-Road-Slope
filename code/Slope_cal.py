@@ -162,16 +162,16 @@ def get_slope(routes, df_probe, df_link):
     err = err/count
     print(err)
     df_result = pd.DataFrame(result, columns = ['linkPVID','GivenSlope','SlopeExperiment']) 
-    df_result.to_csv('data/test.csv', index=False)
+    df_result.to_csv('data/result.csv', index=False)
 
 
-probe_path = 'data/new_probe_data.csv'
-link_path = 'data/new_link_data.csv'
+# probe_path = 'data/new_probe_data.csv'
+# link_path = 'data/new_link_data.csv'
 
-df_probe = pd.read_csv(probe_path,nrows=1000)
-df_link = pd.read_csv(link_path,nrows = 1000)
+# df_probe = pd.read_csv(probe_path,nrows=1000)
+# df_link = pd.read_csv(link_path,nrows = 1000)
 
 
-routes = {3496:[62007637,51881672,51881767,51881768,51881825],4552:[62007637,51881672,51881767,51881768]}
-# dist = mapping(ref=(2,2),probe=[0,1])
-get_slope(routes, df_probe, df_link)
+# routes = {3496:[62007637,51881672,51881767,51881768,51881825],4552:[62007637,51881672,51881767,51881768]}
+# # dist = mapping(ref=(2,2),probe=[0,1])
+# get_slope(routes, df_probe, df_link)
