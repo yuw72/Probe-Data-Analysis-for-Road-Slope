@@ -7,7 +7,7 @@ import json
 def take_value(e):
     return e[1]
 
-
+'''
 def find_near_links(probe, df_link):
     """find nearest links of a probe points within some threshold
 
@@ -51,7 +51,7 @@ def find_near_links(probe, df_link):
         links.append(link[0])
     
     return links
-
+'''
 
 def find_near_links(probe, df_link, grouped_link):
     """find nearest links of a probe points within some threshold
