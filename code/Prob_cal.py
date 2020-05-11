@@ -178,33 +178,44 @@ def get_transition_prob(link1, link2, df_link, grouped_link):
 
     else:
         k = 0
+        link_shape = link1['shapeInfo']
+        link_shape = link_shape.split('|')
+        point = link_shape[0].split('/')
+        lat, long = float(point[0]), float(point[1])
+        g_lat = str(int(float(lat) / 200)).zfill(5)
+        g_lon = str(int(float(long) / 200)).zfill(5)
+        point_id = g_lat + g_lon
+
+        my_group = grouped_link[point_id]
 
         for index, rows in df_link.iterrows():
+            if rows['refNodeID'] not in grouped_link or rows['nrefNodeID'] not in grouped_link:
+                continue
             if rows['refNodeID'] == ID or rows['nrefNodeID'] == ID:
-                k+=1
+                k += 1
 
-        return 1/k
+        return 1 / k
 
 
-# if __name__ == '__main__':
-#     probe_path = '../data/new_probe_data.csv'
-#     link_path = '../data/new_link_data.csv'
+if __name__ == '__main__':
+    probe_path = '../data/new_probe_data.csv'
+    link_path = '../data/new_link_data.csv'
 
-#     df_probe = pd.read_csv(probe_path, engine='python', nrows=100)
-#     df_link = pd.read_csv(link_path, engine='python', nrows=100)
+    df_probe = pd.read_csv(probe_path, engine='python', nrows=100)
+    df_link = pd.read_csv(link_path, engine='python', nrows=100)
 
-#     df_probe.columns = ['sampleID', 'dataTime', 'sourceCode', 'latitude', 'longitude', 'altitude', 'speed', 'heading']
-#     df_link.columns = ['linkPVID', 'refNodeID', 'nrefNodeID', 'length', 'functionalClass', 'directionofTravel',
-#                        'speedCategory', 'fromRefSpeedLimit',
-#                        'toRedSpeedLimit', 'fromRefNumLanes', 'toRefNumLanes', 'multiDigitized', 'urban', 'timeZone',
-#                        'shapeInfo', 'curvatureInfo', 'slopeInfo']
+    df_probe.columns = ['sampleID', 'dataTime', 'sourceCode', 'latitude', 'longitude', 'altitude', 'speed', 'heading']
+    df_link.columns = ['linkPVID', 'refNodeID', 'nrefNodeID', 'length', 'functionalClass', 'directionofTravel',
+                       'speedCategory', 'fromRefSpeedLimit',
+                       'toRedSpeedLimit', 'fromRefNumLanes', 'toRefNumLanes', 'multiDigitized', 'urban', 'timeZone',
+                       'shapeInfo', 'curvatureInfo', 'slopeInfo']
 
-#     # get_dist(df_probe.iloc[0], df_link.iloc[0])
+    #     # get_dist(df_probe.iloc[0], df_link.iloc[0])
 
-#     # get_initial_prob(df_probe.iloc[0], df_link.iloc[0], df_link)
-#     # get_group(123, df_link)
-#     idx = np.random.randint(0, 100, 2)
-#     p = get_initial_prob(df_probe.iloc[idx[0]], df_link.iloc[idx[1]], df_link)
+    #     # get_initial_prob(df_probe.iloc[0], df_link.iloc[0], df_link)
+    #     # get_group(123, df_link)
+    #     idx = np.random.randint(0, 100, 2)
+    #     p = get_initial_prob(df_probe.iloc[idx[0]], df_link.iloc[idx[1]], df_link)
 
     # print(f'index is {idx}')
     # get_dist(df_probe.iloc[idx[0]], df_link.iloc[idx[1]])
@@ -214,7 +225,7 @@ def get_transition_prob(link1, link2, df_link, grouped_link):
     # e_prob = get_emission_prob(df_probe.iloc[idx[0]], df_link.iloc[idx[1]])
     # print(f'emission probability = {e_prob}')
 
-    # p = get_transition_prob(df_link.iloc[0], df_link.iloc[0], df_link)
+    p = get_transition_prob(df_link.iloc[0], df_link.iloc[0], df_link)
 
     # for index, rows in df_probe.iterrows():
     #     rows = np.array(rows)
