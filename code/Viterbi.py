@@ -55,7 +55,7 @@ def find_near_links(probe, df_link, grouped_link):
     return links
 
 
-def viterbi_new(df_probe, df_link, grouped_link):
+def viterbi(df_probe, df_link, grouped_link):
     """ Get the route (set of links in order) with the highest probability
 
     Arguments:
@@ -110,14 +110,12 @@ def viterbi_new(df_probe, df_link, grouped_link):
             route[j-1] = int(links[j-1, ind]['linkPVID'])
         v_route[int(sample)] = route
 
-        if cnt % 10 == 0:
+        if cnt % 30 == 0:
             # Write to json
             with open('data/routes.txt', 'w') as file:
                 file.write(json.dumps(v_route))
 
         cnt += 1
-        
-    return v_route
 
     
 if __name__ == "__main__":
@@ -125,10 +123,11 @@ if __name__ == "__main__":
     link_path = 'data/new_link_data.csv'
     grouped_link_path = 'data/group_link_data.txt'
 
-    df_probe = pd.read_csv(probe_path, skiprows=[i for i in range(1,15568)])
+    df_probe = pd.read_csv(probe_path)
     df_link = pd.read_csv(link_path)
+    
     with open(grouped_link_path, 'r') as openfile: 
         grouped_link = json.load(openfile) 
 
     # Mapmatching
-    routes = viterbi_new(df_probe, df_link, grouped_link)
+    viterbi(df_probe, df_link, grouped_link)

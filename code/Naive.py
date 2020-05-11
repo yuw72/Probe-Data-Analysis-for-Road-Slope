@@ -155,8 +155,8 @@ def naive(df_probe, df_link):
 
 
 if __name__ == "__main__":
-    probe_path = '../data/new_probe_data.csv'
-    link_path = '../data/new_link_data.csv'
+    probe_path = 'data/new_probe_data.csv'
+    link_path = 'data/new_link_data.csv'
 
     df_probe = pd.read_csv(probe_path, nrows=100)
     df_link = pd.read_csv(link_path, nrows=20)

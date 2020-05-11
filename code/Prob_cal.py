@@ -64,16 +64,10 @@ def get_initial_prob(probe, link, df_link, grouped_link):
         g_id = str(g_lat).zfill(5) + str(g_lon).zfill(5)
         cnt += 1
 
-    # denominator = 0
-    # numerator = 1 / get_dist(probe, link)
-
     distance = []
     links_id = grouped_link[g_id]
     links_id = np.unique(np.array(links_id))
     denominator = len(links_id)
-    # for link in links_id:
-    #     ind = df_link.loc[df_link['linkPVID'] == link].index.tolist()[0]
-    #     denominator += 1 / get_dist(probe, df_link.iloc[ind])
 
     return 1 / denominator
 
@@ -93,10 +87,8 @@ def get_emission_prob(probe, link):
     v_phi = 1  # radian angle
     v_b = 40  # meters
 
-    # calculate the heading of the link
-    # cal b
+    # calculate the heading of the link and b
     b = get_dist(probe, link)
-    # print(f'dist from probe to link is {b}')
 
     link_shape = link['shapeInfo'].split('|')
     p = (probe['latitude'], probe['longitude'])
@@ -116,31 +108,18 @@ def get_emission_prob(probe, link):
             x2, y2 = float(p2[0]), float(p2[1])
 
             break
-    # x1, y1 = float(p1[0]), float(p1[1])
-    # x2, y2 = float(p2[0]), float(p2[1])
-
-    # print(f'p1 coord is {x1}, {y1}')
-    # print(f'p2 coord is {x2}, {y2}')
-    # print(f'delta is {x2-x1}, {y2-y1}')
 
     angle = np.arctan2(x2 - x1, y2 - y1)  # * 180 / np.pi  # in radian
     if angle < 0:
         angle += 2 * np.pi
-    # print(f'angle is {angle}')
 
     # cal delta heading
-    # print('probe heading is', {probe['heading'] / 180 * np.pi})
     delta_heading = probe['heading'] / 180 * np.pi - angle  # in radian
-    # print(f'delta heading is {delta_heading}')
 
     # calculate normal distributions
-
     p_b = 1 / (np.sqrt(2 * np.pi) * v_b) * np.exp(-0.5 * (b / v_b) ** 2)
     p_phi = 1 / (np.sqrt(2 * np.pi) * v_phi) * np.exp(-0.5 * (delta_heading / v_phi) ** 2)
 
-    # print(f'prob by dist is {p_b}')
-    # print(f'prob by angle is {p_phi}')
-    # return prob
     return p_b * p_phi
 
 
@@ -167,27 +146,10 @@ def get_transition_prob(link1, link2, df_link, grouped_link):
     elif link1['nrefNodeID'] == link2['nrefNodeID']:
         ID = link1['nrefNodeID']
 
-    # (1) link1 and link2 are connected
-    # if link1['refNodeID'] == link2['refNodeID'] or link1['refNodeID'] == link2['nrefNodeID'] or link1['nrefNodeID'] == \
-    #         link2['refNodeID'] or link1['nrefNodeID'] == link2['nrefNodeID']:
-    #     k = 0
-    #
-    #     for index, rows in df_link.iterrows():
-    #
-    #         if rows['refNodeID'] == link1['refNodeID'] or rows['refNodeID'] == link2['refNodeID'] or rows[
-    #             'refNodeID'] == link1['nrefNodeID'] or rows['refNodeID'] == link2['nrefNodeID'] or rows['nrefNodeID'] == \
-    #                 link1['refNodeID'] or rows['nrefNodeID'] == link2['refNodeID'] or rows['nrefNodeID'] == link1[
-    #             'nrefNodeID'] or rows['nrefNodeID'] == link2['nrefNodeID']:
-    #             k += 1
-    #
-    #     return 1 / k
-    # Compute number of links at this intersection
-    # prob = 1/k
-
-    # (2) Not connected
+    # (1) link1 and link2 are not connected
     if ID is None:
         return 0
-
+    # (2) Connected
     else:
         k = 0
         link_shape = link1['shapeInfo']
@@ -223,46 +185,3 @@ def get_transition_prob(link1, link2, df_link, grouped_link):
                 k += 1
 
         return 1 / k
-
-
-# if __name__ == '__main__':
-#     probe_path = '../data/new_probe_data.csv'
-#     link_path = '../data/new_link_data.csv'
-
-#     df_probe = pd.read_csv(probe_path, engine='python', nrows=100)
-#     df_link = pd.read_csv(link_path, engine='python', nrows=100)
-
-#     df_probe.columns = ['sampleID', 'dataTime', 'sourceCode', 'latitude', 'longitude', 'altitude', 'speed', 'heading']
-#     df_link.columns = ['linkPVID', 'refNodeID', 'nrefNodeID', 'length', 'functionalClass', 'directionofTravel',
-#                        'speedCategory', 'fromRefSpeedLimit',
-#                        'toRedSpeedLimit', 'fromRefNumLanes', 'toRefNumLanes', 'multiDigitized', 'urban', 'timeZone',
-#                        'shapeInfo', 'curvatureInfo', 'slopeInfo']
-
-    #     # get_dist(df_probe.iloc[0], df_link.iloc[0])
-
-    #     # get_initial_prob(df_probe.iloc[0], df_link.iloc[0], df_link)
-    #     # get_group(123, df_link)
-    #     idx = np.random.randint(0, 100, 2)
-    #     p = get_initial_prob(df_probe.iloc[idx[0]], df_link.iloc[idx[1]], df_link)
-
-    # print(f'index is {idx}')
-    # get_dist(df_probe.iloc[idx[0]], df_link.iloc[idx[1]])
-
-    # print('coordinate of probe is ', df_probe['latitude'], df_probe['longitude'])
-
-    # e_prob = get_emission_prob(df_probe.iloc[idx[0]], df_link.iloc[idx[1]])
-    # print(f'emission probability = {e_prob}')
-
-    # p = get_transition_prob(df_link.iloc[0], df_link.iloc[0], df_link)
-
-    # for index, rows in df_probe.iterrows():
-    #     rows = np.array(rows)
-    #
-    #     print(rows[3:5])
-    #     break
-    #
-    # for index, rows in df_link.iterrows():
-    #     rows = np.array(rows)
-    #     print(rows[14])
-    #     print(type(rows[14]))
-    #     break

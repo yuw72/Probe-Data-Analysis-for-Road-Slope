@@ -3,9 +3,7 @@ import math
 import pandas as pd
 from sklearn.metrics import accuracy_score
 import json
-# def cal_error():
-#     # TODO:
-#     return err
+
 
 # pass
 def unit_vector(vector):
