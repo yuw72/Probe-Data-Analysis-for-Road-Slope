@@ -3,6 +3,7 @@ import pandas as pd
 from Prob_cal import *
 from tqdm import tqdm
 import json
+import heapq
 
 def take_value(e):
     return e[1]
@@ -65,7 +66,6 @@ def find_near_links(probe, df_link, grouped_link):
     """
 
     num = 4  # choose nearest 4 links
-    links_dis = []  # list of tuples
     links = []
 
     # Calculate g_id of probe
@@ -76,10 +76,13 @@ def find_near_links(probe, df_link, grouped_link):
     # find links within the group
     links_id = grouped_link[g_id]
     links_id = np.unique(np.array(links_id))
+    h = []  # heap
     links = []
     for link in links_id:
         ind = df_link.loc[df_link['linkPVID'] == link].index.tolist()[0]
-        links.append(df_link.iloc[ind])
+        heapq.heappush(h, (get_dist(probe, df_link.iloc[ind]), df_link.iloc[ind]))
+    for i in range(4):
+        links.append(heapq.heappop(h)[1])
     return links
 
 
