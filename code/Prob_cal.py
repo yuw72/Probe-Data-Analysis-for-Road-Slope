@@ -35,17 +35,6 @@ def get_dist(probe, link):  # calculate the closest distance from probe to a roa
     return min_dist
 
 
-# def get_group(probe_id, df_link):
-#     grouped_link_path = '../data/group_link_data.txt'
-#     # print(probe_id)
-#     with open(grouped_link_path, 'r') as openfile:
-#         grouped_link = json.load(openfile)
-#         return grouped_link[probe_id]
-
-
-
-
-
 def get_initial_prob(probe, link, df_link, grouped_link):
     """Get initial state probability of the link given the first probe
 
@@ -58,27 +47,23 @@ def get_initial_prob(probe, link, df_link, grouped_link):
         link_prob float -- probability P(link)
     """
 
-    # threshold of distance (meters)
-    # threshold = 200
-    # num_roads = 10
-
     lat, long = probe['latitude'], probe['longitude']
     g_lat = str(int(float(lat) / 200)).zfill(5)
     g_lon = str(int(float(long) / 200)).zfill(5)
     g_id = g_lat + g_lon
 
-    denominator = 0
-
-    numerator = 1 / get_dist(probe, link)
+    # denominator = 0
+    # numerator = 1 / get_dist(probe, link)
 
     distance = []
     links_id = grouped_link[g_id]
     links_id = np.unique(np.array(links_id))
-    for link in links_id:
-        ind = df_link.loc[df_link['linkPVID'] == link].index.tolist()[0]
-        denominator += 1 / get_dist(probe, df_link.iloc[ind])
+    denominator = len(links_id)
+    # for link in links_id:
+    #     ind = df_link.loc[df_link['linkPVID'] == link].index.tolist()[0]
+    #     denominator += 1 / get_dist(probe, df_link.iloc[ind])
 
-    return numerator / denominator
+    return 1 / denominator
 
 
 def get_emission_prob(probe, link):

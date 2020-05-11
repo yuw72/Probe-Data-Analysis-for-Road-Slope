@@ -103,7 +103,7 @@ if __name__ == "__main__":
     link_path = 'data/new_link_data.csv'
     grouped_link_path = 'data/group_link_data.txt'
 
-    df_probe = pd.read_csv(probe_path,nrows=100)
+    df_probe = pd.read_csv(probe_path,nrows=10)
     df_link = pd.read_csv(link_path,nrows=1000)
     with open(grouped_link_path, 'r') as openfile: 
         grouped_link = json.load(openfile) 
