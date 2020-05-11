@@ -8,51 +8,6 @@ import heapq
 def take_value(e):
     return e[1]
 
-'''
-def find_near_links(probe, df_link):
-    """find nearest links of a probe points within some threshold
-
-    Arguments:
-        probe {dataframe} -- a probe point
-        df_link {dataframe} -- all link data
-
-    Returns:
-        list -- list of links found within threshold (linkPVID)
-    """
-
-    threshold = 200  # (meters)
-    num = 4  # choose nearest 4 links
-    links_dis = []  # list of tuples
-    links = []
-
-    # Calculate four coords
-    x_min = float(probe['latitude']) - threshold
-    x_max = float(probe['latitude']) + threshold
-    y_min = float(probe['longitude']) - threshold
-    y_max = float(probe['longitude']) + threshold
-
-    # find links with ref and nref both in the coord range
-    for index, link in df_link.iterrows():
-        link_shape = link['shapeInfo'].split('|')
-        flag = 1
-        # check if all the points are inside the distance
-        for index in range(len(link_shape)):
-            p = link_shape[index].split('/')
-            if (float(p[0]) > x_max) or (float(p[0]) < x_min) or (float(p[1]) > y_max) or (float(p[1]) < y_min):
-                flag = 0
-                break
-        # yes
-        if flag == 1:
-            dis = get_dist(probe, link)
-            links_dis.append((link, dis))
-
-    # find top 4
-    links_dis.sort(key=take_value)
-    for link in links_dis[:num]:
-        links.append(link[0])
-    
-    return links
-'''
 
 def find_near_links(probe, df_link, grouped_link):
     """find nearest links of a probe points within some threshold
@@ -112,7 +67,7 @@ def viterbi_new(df_probe, df_link, grouped_link):
         links0 = find_near_links(df.iloc[0], df_link, grouped_link) # Need change return format
         links[0,:len(links0)] = links0
         for i in range(len(links0)):
-            T1[i,0] = get_initial_prob(df.iloc[0], links0[i], df_link) * get_emission_prob(df.iloc[0], links0[i])
+            T1[i,0] = get_initial_prob(df.iloc[0], links0[i], df_link, grouped_link) * get_emission_prob(df.iloc[0], links0[i])
 
         # Forward
         for j in range(1, df.shape[0]):

@@ -35,18 +35,18 @@ def get_dist(probe, link):  # calculate the closest distance from probe to a roa
     return min_dist
 
 
-def get_group(probe_id, df_link):
-    grouped_link_path = '../data/group_link_data.txt'
-    # print(probe_id)
-    with open(grouped_link_path, 'r') as openfile:
-        grouped_link = json.load(openfile)
-        return grouped_link[probe_id]
+# def get_group(probe_id, df_link):
+#     grouped_link_path = '../data/group_link_data.txt'
+#     # print(probe_id)
+#     with open(grouped_link_path, 'r') as openfile:
+#         grouped_link = json.load(openfile)
+#         return grouped_link[probe_id]
 
 
 
 
 
-def get_initial_prob(probe, link, df_link):
+def get_initial_prob(probe, link, df_link, grouped_link):
     """Get initial state probability of the link given the first probe
 
     Arguments:
@@ -62,53 +62,23 @@ def get_initial_prob(probe, link, df_link):
     # threshold = 200
     # num_roads = 10
 
-    grouped_link_path = 'data/group_link_data.txt'
-
     lat, long = probe['latitude'], probe['longitude']
     g_lat = str(int(float(lat) / 200)).zfill(5)
     g_lon = str(int(float(long) / 200)).zfill(5)
-    probe_id = g_lat + g_lon
-
-    group_id = get_group(probe_id, df_link)
+    g_id = g_lat + g_lon
 
     denominator = 0
-    # find all links in the threshold
 
     numerator = 1 / get_dist(probe, link)
 
     distance = []
-    for index, rows in df_link.iterrows():
-        if rows['linkPVID'] in group_id:
-            distance.append(get_dist(probe, rows))
-
-    # mean = np.mean(distance)
-    # std = np.std(distance)
-
-    threshold = min(distance) + 200
-    # distance.sort()
-
-    # while distance[0] > threshold:
-    #     threshold += 100
-
-    for d in distance:
-        if d < threshold:
-            denominator += 1 / d
+    links_id = grouped_link[g_id]
+    links_id = np.unique(np.array(links_id))
+    for link in links_id:
+        ind = df_link.loc[df_link['linkPVID'] == link].index.tolist()[0]
+        denominator += 1 / get_dist(probe, df_link.iloc[ind])
 
     return numerator / denominator
-
-    # while True:
-    #     for index, rows in df_link.iterrows():
-    #         dist = get_dist(probe, rows)
-    #         if dist < threshold:
-    #             denominator += 1 / dist
-    #     if denominator != 0:
-    #         return numerator / denominator
-    #     else:
-    #         threshold += 100
-
-    # calculate prob for all links = (1/dis(probe, link))/sum(1/dis(probe, links))
-
-    # return links_prob
 
 
 def get_emission_prob(probe, link):
@@ -177,7 +147,7 @@ def get_emission_prob(probe, link):
     return p_b * p_phi
 
 
-def get_transition_prob(link1, link2, df_link):
+def get_transition_prob(link1, link2, df_link, grouped_link):
     """calculate transition probability of a probe going from link1 to link2. P(link2 | link1) or P(link1 -> link2)
 
     Arguments:
@@ -186,7 +156,7 @@ def get_transition_prob(link1, link2, df_link):
         df_link {dataframe} -- set of all links data
 
     Returns:
-        porb float -- probability P(link1 -> link2)
+        prob float -- probability P(link1 -> link2)
     """
 
     # (1) link1 and link2 are connected
@@ -201,36 +171,33 @@ def get_transition_prob(link1, link2, df_link):
                 'nrefNodeID'] or rows['nrefNodeID'] == link2['nrefNodeID']:
                 k += 1
 
-        return 1 / k
         # Compute number of links at this intersection
-        # prob = 1/k
+        return 1 / k
 
     # (2) Not connected
     else:
         return 0
 
-    # return prob
 
+# if __name__ == '__main__':
+#     probe_path = '../data/new_probe_data.csv'
+#     link_path = '../data/new_link_data.csv'
 
-if __name__ == '__main__':
-    probe_path = '../data/new_probe_data.csv'
-    link_path = '../data/new_link_data.csv'
+#     df_probe = pd.read_csv(probe_path, engine='python', nrows=100)
+#     df_link = pd.read_csv(link_path, engine='python', nrows=100)
 
-    df_probe = pd.read_csv(probe_path, engine='python', nrows=100)
-    df_link = pd.read_csv(link_path, engine='python', nrows=100)
+#     df_probe.columns = ['sampleID', 'dataTime', 'sourceCode', 'latitude', 'longitude', 'altitude', 'speed', 'heading']
+#     df_link.columns = ['linkPVID', 'refNodeID', 'nrefNodeID', 'length', 'functionalClass', 'directionofTravel',
+#                        'speedCategory', 'fromRefSpeedLimit',
+#                        'toRedSpeedLimit', 'fromRefNumLanes', 'toRefNumLanes', 'multiDigitized', 'urban', 'timeZone',
+#                        'shapeInfo', 'curvatureInfo', 'slopeInfo']
 
-    df_probe.columns = ['sampleID', 'dataTime', 'sourceCode', 'latitude', 'longitude', 'altitude', 'speed', 'heading']
-    df_link.columns = ['linkPVID', 'refNodeID', 'nrefNodeID', 'length', 'functionalClass', 'directionofTravel',
-                       'speedCategory', 'fromRefSpeedLimit',
-                       'toRedSpeedLimit', 'fromRefNumLanes', 'toRefNumLanes', 'multiDigitized', 'urban', 'timeZone',
-                       'shapeInfo', 'curvatureInfo', 'slopeInfo']
+#     # get_dist(df_probe.iloc[0], df_link.iloc[0])
 
-    # get_dist(df_probe.iloc[0], df_link.iloc[0])
-
-    # get_initial_prob(df_probe.iloc[0], df_link.iloc[0], df_link)
-    # get_group(123, df_link)
-    idx = np.random.randint(0, 100, 2)
-    p = get_initial_prob(df_probe.iloc[idx[0]], df_link.iloc[idx[1]], df_link)
+#     # get_initial_prob(df_probe.iloc[0], df_link.iloc[0], df_link)
+#     # get_group(123, df_link)
+#     idx = np.random.randint(0, 100, 2)
+#     p = get_initial_prob(df_probe.iloc[idx[0]], df_link.iloc[idx[1]], df_link)
 
     # print(f'index is {idx}')
     # get_dist(df_probe.iloc[idx[0]], df_link.iloc[idx[1]])
