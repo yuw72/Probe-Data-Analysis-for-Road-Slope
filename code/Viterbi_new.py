@@ -61,7 +61,7 @@ def find_near_links(probe, df_link, grouped_link):
         df_link {dataframe} -- all link data
 
     Returns:
-        list -- list of links found within threshold (linkPVID)
+        list -- list of link dataframes found within threshold
     """
 
     num = 4  # choose nearest 4 links
@@ -75,10 +75,11 @@ def find_near_links(probe, df_link, grouped_link):
 
     # find links within the group
     links_id = grouped_link[g_id]
-    # links = df_link.loc[df_link['linkPVID'].isin(links_id)]
+    links_id = np.unique(np.array(links_id))
     links = []
-    for i in range(len(links_id)):
-        links.append(df_link.iloc[i])
+    for link in links_id:
+        ind = df_link.loc[df_link['linkPVID'] == link].index.tolist()[0]
+        links.append(df_link.iloc[ind])
     return links
 
 
@@ -113,7 +114,7 @@ def viterbi_new(df_probe, df_link, grouped_link):
         # Forward
         for j in range(1, df.shape[0]):
             probe = df.iloc[j]  # current probe
-            curr_links = find_near_links(probe, df_link)  # links of current probe
+            curr_links = find_near_links(probe, df_link, grouped_link)  # links of current probe
             links[j,:len(curr_links)] = curr_links
             for i in range(len(curr_links)):
                 link = curr_links[i]
@@ -145,7 +146,7 @@ if __name__ == "__main__":
     grouped_link_path = 'data/group_link_data.txt'
 
     df_probe = pd.read_csv(probe_path,nrows=100)
-    df_link = pd.read_csv(link_path,nrows=100)
+    df_link = pd.read_csv(link_path,nrows=1000)
     with open(grouped_link_path, 'r') as openfile: 
         grouped_link = json.load(openfile) 
 
