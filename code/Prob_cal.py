@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import json
 
 
 def point_to_line(p1, p2, p):
@@ -34,6 +35,17 @@ def get_dist(probe, link):  # calculate the closest distance from probe to a roa
     return min_dist
 
 
+def get_group(probe_id, df_link):
+    grouped_link_path = '../data/group_link_data.txt'
+    # print(probe_id)
+    with open(grouped_link_path, 'r') as openfile:
+        grouped_link = json.load(openfile)
+        return grouped_link[probe_id]
+
+
+
+
+
 def get_initial_prob(probe, link, df_link):
     """Get initial state probability of the link given the first probe
 
@@ -49,6 +61,16 @@ def get_initial_prob(probe, link, df_link):
     # threshold of distance (meters)
     # threshold = 200
     # num_roads = 10
+
+    grouped_link_path = 'data/group_link_data.txt'
+
+    lat, long = probe['latitude'], probe['longitude']
+    g_lat = str(int(float(lat) / 200)).zfill(5)
+    g_lon = str(int(float(long) / 200)).zfill(5)
+    probe_id = g_lat + g_lon
+
+    group_id = get_group(probe_id, df_link)
+
     denominator = 0
     # find all links in the threshold
 
@@ -56,7 +78,8 @@ def get_initial_prob(probe, link, df_link):
 
     distance = []
     for index, rows in df_link.iterrows():
-        distance.append(get_dist(probe, rows))
+        if rows['linkPVID'] in group_id:
+            distance.append(get_dist(probe, rows))
 
     # mean = np.mean(distance)
     # std = np.std(distance)
@@ -205,14 +228,16 @@ if __name__ == '__main__':
     # get_dist(df_probe.iloc[0], df_link.iloc[0])
 
     # get_initial_prob(df_probe.iloc[0], df_link.iloc[0], df_link)
-
+    # get_group(123, df_link)
     idx = np.random.randint(0, 100, 2)
+    p = get_initial_prob(df_probe.iloc[idx[0]], df_link.iloc[idx[1]], df_link)
+
     # print(f'index is {idx}')
-    get_dist(df_probe.iloc[idx[0]], df_link.iloc[idx[1]])
+    # get_dist(df_probe.iloc[idx[0]], df_link.iloc[idx[1]])
 
     # print('coordinate of probe is ', df_probe['latitude'], df_probe['longitude'])
 
-    e_prob = get_emission_prob(df_probe.iloc[idx[0]], df_link.iloc[idx[1]])
+    # e_prob = get_emission_prob(df_probe.iloc[idx[0]], df_link.iloc[idx[1]])
     # print(f'emission probability = {e_prob}')
 
     # p = get_transition_prob(df_link.iloc[0], df_link.iloc[0], df_link)
