@@ -47,10 +47,22 @@ def get_initial_prob(probe, link, df_link, grouped_link):
         link_prob float -- probability P(link)
     """
 
-    lat, long = probe['latitude'], probe['longitude']
-    g_lat = str(int(float(lat) / 200)).zfill(5)
-    g_lon = str(int(float(long) / 200)).zfill(5)
-    g_id = g_lat + g_lon
+    g_lat = int(float(probe['latitude'])/250)
+    g_lon = int(float(probe['longitude'])/250)
+    g_id = str(g_lat).zfill(5) + str(g_lon).zfill(5)
+    cnt = 0
+    while g_id not in grouped_link:
+        if cnt > 5:
+            cnt = 0
+            break
+        g_lat -= 1
+        g_id = str(g_lat).zfill(5) + str(g_lon).zfill(5)
+        cnt += 1
+    while g_id not in grouped_link:
+        g_lat += 1
+        g_lon += 1
+        g_id = str(g_lat).zfill(5) + str(g_lon).zfill(5)
+        cnt += 1
 
     # denominator = 0
     # numerator = 1 / get_dist(probe, link)
@@ -180,35 +192,51 @@ def get_transition_prob(link1, link2, df_link, grouped_link):
         k = 0
         link_shape = link1['shapeInfo']
         link_shape = link_shape.split('|')
-        point = link_shape[0].split('/')
-        lat, long = float(point[0]), float(point[1])
-        g_lat = str(int(float(lat) / 200)).zfill(5)
-        g_lon = str(int(float(long) / 200)).zfill(5)
-        point_id = g_lat + g_lon
+        p = link_shape[0].split('/')
 
-        my_group = grouped_link[point_id]
+        g_lat = int(float(p[0])/250)
+        g_lon = int(float(p[1])/250)
+        g_id = str(g_lat).zfill(5) + str(g_lon).zfill(5)
+        cnt = 0
+        while g_id not in grouped_link:
+            if cnt > 5:
+                cnt = 0
+                break
+            g_lat -= 1
+            g_id = str(g_lat).zfill(5) + str(g_lon).zfill(5)
+            cnt += 1
+        while g_id not in grouped_link:
+            g_lat += 1
+            g_lon += 1
+            g_id = str(g_lat).zfill(5) + str(g_lon).zfill(5)
+        
 
-        for index, rows in df_link.iterrows():
-            if rows['refNodeID'] not in grouped_link or rows['nrefNodeID'] not in grouped_link:
-                continue
+        links_id = grouped_link[g_id]
+        links_id = np.unique(np.array(links_id))
+
+        for link in links_id:
+            ind = df_link.loc[df_link['linkPVID'] == link].index.tolist()[0]
+            rows = df_link.iloc[ind]
+            # if rows['refNodeID'] not in grouped_link or rows['nrefNodeID'] not in grouped_link:
+            #     continue
             if rows['refNodeID'] == ID or rows['nrefNodeID'] == ID:
                 k += 1
 
         return 1 / k
 
 
-if __name__ == '__main__':
-    probe_path = '../data/new_probe_data.csv'
-    link_path = '../data/new_link_data.csv'
+# if __name__ == '__main__':
+#     probe_path = '../data/new_probe_data.csv'
+#     link_path = '../data/new_link_data.csv'
 
-    df_probe = pd.read_csv(probe_path, engine='python', nrows=100)
-    df_link = pd.read_csv(link_path, engine='python', nrows=100)
+#     df_probe = pd.read_csv(probe_path, engine='python', nrows=100)
+#     df_link = pd.read_csv(link_path, engine='python', nrows=100)
 
-    df_probe.columns = ['sampleID', 'dataTime', 'sourceCode', 'latitude', 'longitude', 'altitude', 'speed', 'heading']
-    df_link.columns = ['linkPVID', 'refNodeID', 'nrefNodeID', 'length', 'functionalClass', 'directionofTravel',
-                       'speedCategory', 'fromRefSpeedLimit',
-                       'toRedSpeedLimit', 'fromRefNumLanes', 'toRefNumLanes', 'multiDigitized', 'urban', 'timeZone',
-                       'shapeInfo', 'curvatureInfo', 'slopeInfo']
+#     df_probe.columns = ['sampleID', 'dataTime', 'sourceCode', 'latitude', 'longitude', 'altitude', 'speed', 'heading']
+#     df_link.columns = ['linkPVID', 'refNodeID', 'nrefNodeID', 'length', 'functionalClass', 'directionofTravel',
+#                        'speedCategory', 'fromRefSpeedLimit',
+#                        'toRedSpeedLimit', 'fromRefNumLanes', 'toRefNumLanes', 'multiDigitized', 'urban', 'timeZone',
+#                        'shapeInfo', 'curvatureInfo', 'slopeInfo']
 
     #     # get_dist(df_probe.iloc[0], df_link.iloc[0])
 
@@ -225,7 +253,7 @@ if __name__ == '__main__':
     # e_prob = get_emission_prob(df_probe.iloc[idx[0]], df_link.iloc[idx[1]])
     # print(f'emission probability = {e_prob}')
 
-    p = get_transition_prob(df_link.iloc[0], df_link.iloc[0], df_link)
+    # p = get_transition_prob(df_link.iloc[0], df_link.iloc[0], df_link)
 
     # for index, rows in df_probe.iterrows():
     #     rows = np.array(rows)
