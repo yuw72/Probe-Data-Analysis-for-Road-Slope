@@ -5,9 +5,6 @@ from tqdm import tqdm
 import json
 import heapq
 
-def take_value(e):
-    return e[1]
-
 
 def find_near_links(probe, df_link, grouped_link):
     """find nearest links of a probe points within some threshold
@@ -125,7 +122,7 @@ if __name__ == "__main__":
 
     df_probe = pd.read_csv(probe_path)
     df_link = pd.read_csv(link_path)
-    
+
     with open(grouped_link_path, 'r') as openfile: 
         grouped_link = json.load(openfile) 
 
