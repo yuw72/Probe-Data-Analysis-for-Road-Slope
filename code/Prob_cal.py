@@ -144,24 +144,46 @@ def get_transition_prob(link1, link2, df_link, grouped_link):
         prob float -- probability P(link1 -> link2)
     """
 
+    ID = None
+
+    if link1['refNodeID'] == link2['refNodeID']:
+        ID = link1['refNodeID']
+    elif link1['refNodeID'] == link2['nrefNodeID']:
+        ID = link1['refNodeID']
+    elif link1['nrefNodeID'] == link2['refNodeID']:
+        ID = link1['nrefNodeID']
+    elif link1['nrefNodeID'] == link2['nrefNodeID']:
+        ID = link1['nrefNodeID']
+
     # (1) link1 and link2 are connected
-    if link1['refNodeID'] == link2['refNodeID'] or link1['refNodeID'] == link2['nrefNodeID'] or link1['nrefNodeID'] == \
-            link2['refNodeID'] or link1['nrefNodeID'] == link2['nrefNodeID']:
+    # if link1['refNodeID'] == link2['refNodeID'] or link1['refNodeID'] == link2['nrefNodeID'] or link1['nrefNodeID'] == \
+    #         link2['refNodeID'] or link1['nrefNodeID'] == link2['nrefNodeID']:
+    #     k = 0
+    #
+    #     for index, rows in df_link.iterrows():
+    #
+    #         if rows['refNodeID'] == link1['refNodeID'] or rows['refNodeID'] == link2['refNodeID'] or rows[
+    #             'refNodeID'] == link1['nrefNodeID'] or rows['refNodeID'] == link2['nrefNodeID'] or rows['nrefNodeID'] == \
+    #                 link1['refNodeID'] or rows['nrefNodeID'] == link2['refNodeID'] or rows['nrefNodeID'] == link1[
+    #             'nrefNodeID'] or rows['nrefNodeID'] == link2['nrefNodeID']:
+    #             k += 1
+    #
+    #     return 1 / k
+    # Compute number of links at this intersection
+    # prob = 1/k
+
+    # (2) Not connected
+    if ID is None:
+        return 0
+
+    else:
         k = 0
 
         for index, rows in df_link.iterrows():
-            if rows['refNodeID'] == link1['refNodeID'] or rows['refNodeID'] == link2['refNodeID'] or rows[
-                'refNodeID'] == link1['nrefNodeID'] or rows['refNodeID'] == link2['nrefNodeID'] or rows['nrefNodeID'] == \
-                    link1['refNodeID'] or rows['nrefNodeID'] == link2['refNodeID'] or rows['nrefNodeID'] == link1[
-                'nrefNodeID'] or rows['nrefNodeID'] == link2['nrefNodeID']:
-                k += 1
+            if rows['refNodeID'] == ID or rows['nrefNodeID'] == ID:
+                k+=1
 
-        # Compute number of links at this intersection
-        return 1 / k
-
-    # (2) Not connected
-    else:
-        return 0
+        return 1/k
 
 
 # if __name__ == '__main__':

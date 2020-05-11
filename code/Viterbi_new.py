@@ -37,7 +37,8 @@ def find_near_links(probe, df_link, grouped_link):
         ind = df_link.loc[df_link['linkPVID'] == link].index.tolist()[0]
         heapq.heappush(h, (get_dist(probe, df_link.iloc[ind]), df_link.iloc[ind]))
     for i in range(4):
-        links.append(heapq.heappop(h)[1])
+        if len(h) != 0:
+            links.append(heapq.heappop(h)[1])
     return links
 
 
@@ -79,7 +80,7 @@ def viterbi_new(df_probe, df_link, grouped_link):
                 max_prob = 0
                 for k in range(4):  # iter prev links
                     if T1[k, j-1] != 0:
-                        prob = T1[k,j-1] * get_transition_prob(link, links[j-1,k], df_link) * get_emission_prob(probe, link)
+                        prob = T1[k,j-1] * get_transition_prob(link, links[j-1,k], df_link, grouped_link) * get_emission_prob(probe, link)
                     else:
                         continue
                     if prob >= max_prob:
